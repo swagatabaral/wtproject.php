@@ -1,0 +1,243 @@
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "inventorydb";
+
+$conn = mysqli_connect($servername, $username, $password);
+if (!$conn) {
+    die("❌ Database connection failed: " . mysqli_connect_error());
+}
+
+if (!mysqli_query($conn, "CREATE DATABASE IF NOT EXISTS `$dbname`")) {
+    die("❌ Failed to create database: " . mysqli_error($conn));
+}
+mysqli_select_db($conn, $dbname);
+
+$create_table = "
+    CREATE TABLE IF NOT EXISTS products (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        quantity INT NOT NULL,
+        revenue DECIMAL(10,2) NOT NULL DEFAULT 0,
+        status ENUM('to_ship', 'shipped', 'to_arrive', 'store') NOT NULL DEFAULT 'store',
+        date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+";
+if (!mysqli_query($conn, $create_table)) {
+    die("❌ Table creation error: " . mysqli_error($conn));
+}
+
+// Step 2: Handle form POST
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // ADD product
+    if (
+        !empty($_POST["product_name"]) &&
+        isset($_POST["product_price"], $_POST["product_quantity"], $_POST["product_status"])
+    ) {
+        $name = mysqli_real_escape_string($conn, $_POST["product_name"]);
+        $price = floatval($_POST["product_price"]);
+        $quantity = intval($_POST["product_quantity"]);
+        $status = mysqli_real_escape_string($conn, $_POST["product_status"]);
+        $revenue = $price * $quantity;
+
+        // Check if product already exists with same status
+        $check_query = "SELECT * FROM products WHERE name='$name' AND status='$status'";
+        $check_result = mysqli_query($conn, $check_query);
+
+        if ($check_result && mysqli_num_rows($check_result) > 0) {
+            $existing = mysqli_fetch_assoc($check_result);
+            $new_quantity = $existing["quantity"] + $quantity;
+            $new_revenue = $existing["revenue"] + $revenue;
+
+            $update_query = "UPDATE products 
+                             SET quantity = $new_quantity, revenue = $new_revenue 
+                             WHERE id = {$existing['id']}";
+
+            if (!mysqli_query($conn, $update_query)) {
+                echo "❌ Failed to update product: " . mysqli_error($conn);
+            }
+        } else {
+            // Insert new product
+            $insert_query = "INSERT INTO products (name, price, quantity, revenue, status) 
+                             VALUES ('$name', $price, $quantity, $revenue, '$status')";
+
+            if (!mysqli_query($conn, $insert_query)) {
+                echo "❌ Failed to insert product: " . mysqli_error($conn);
+            }
+        }
+    }
+
+    // DELETE product
+    if (!empty($_POST["delete_id"])) {
+        $delete_id = intval($_POST["delete_id"]);
+        if (!mysqli_query($conn, "DELETE FROM products WHERE id = $delete_id")) {
+            echo "❌ Failed to delete product: " . mysqli_error($conn);
+        }
+    }
+}
+
+// Step 3: Fetch data
+$result = mysqli_query($conn, "SELECT * FROM products");
+if (!$result) {
+    die("❌ Failed to retrieve products: " . mysqli_error($conn));
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory - Product Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: lavender;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form select {
+            padding: 10px;
+            width: 30%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        form input[type="submit"] {
+            background-color: seagreen;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        form input[type="submit"]:hover {
+            background-color: mediumseagreen;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: steelblue;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #eef;
+        }
+
+        .delete-btn {
+            background-color: crimson;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: firebrick;
+        }
+
+        a {
+            text-decoration: none;
+            margin-bottom: 15px;
+            display: inline-block;
+            background-color: royalblue;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<a href="homepagehtml.html">🏠 Back to Home Page</a>
+
+<div class="container">
+    <h1>Inventory Management - Products</h1>
+
+    <!-- Form to add product -->
+    <form method="post">
+        <input type="text" name="product_name" placeholder="Product Name" required>
+        <input type="number" name="product_price" placeholder="Price" step="0.01" required>
+        <input type="number" name="product_quantity" placeholder="Quantity" required>
+        <select name="product_status" required>
+            <option value="store">Store</option>
+            <option value="to_ship">To Ship</option>
+            <option value="shipped">Shipped</option>
+            <option value="to_arrive">To Arrive</option>
+        </select>
+        <input type="submit" value="Add Product">
+    </form>
+
+    <!-- Products Table -->
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Product</th>
+            <th>Price (Rs)</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Revenue (Rs)</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+        <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+        <tr>
+            <td><?php echo $row["id"]; ?></td>
+            <td><?php echo htmlspecialchars($row["name"]); ?></td>
+            <td><?php echo $row["price"]; ?></td>
+            <td><?php echo $row["quantity"]; ?></td>
+            <td><?php echo ucfirst(str_replace("_", " ", $row["status"])); ?></td>
+            <td><?php echo $row["revenue"]; ?></td>
+            <td><?php echo date("Y-m-d", strtotime($row["date_added"])); ?></td>
+            <td>
+                <form method="post" style="display:inline;">
+                    <input type="hidden" name="delete_id" value="<?php echo $row["id"]; ?>">
+                    <input type="submit" value="Delete" class="delete-btn" onclick="return confirm('Delete this product?');">
+                </form>
+            </td>
+        </tr>
+        <?php } ?>
+    </table>
+</div>
+
+</body>
+</html>
