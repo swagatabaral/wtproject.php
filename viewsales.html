@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monthly Sales Report</title>
+
+    <!-- Load Chart.js from CDN to display charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Basic CSS to style the page and chart -->
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f4f4;
+            text-align: center;
+            padding: 40px;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+            max-width: 700px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Page heading -->
+    <h1>Monthly Sales (Last 6 Months)</h1>
+
+    <!-- Chart container (Chart.js will draw inside this canvas) -->
+    <canvas id="salesChart" width="700" height="400"></canvas>
+
+    <!-- JavaScript to fetch data and render the chart -->
+    <script>
+        // Use fetch API to call get_sales.php and retrieve sales data
+        fetch('get_sales.php')
+            .then(response => response.json()) // Convert response to JSON
+            .then(data => {
+                // Get the canvas context where the chart will be rendered
+                const ctx = document.getElementById('salesChart').getContext('2d');
+
+                // Create a new bar chart using Chart.js
+                const chart = new Chart(ctx, {
+                    type: 'bar', // Chart type: bar chart
+                    data: {
+                        labels: data.labels, // Month names from PHP (e.g., Jan, Feb)
+                        datasets: [{
+                            label: 'Total Sales', // Label shown in legend
+                            data: data.sales, // Sales data for each month
+                            backgroundColor: '#4CAF50' // Bar color (green)
+                        }]
+                    },
+                    options: {
+                        responsive: true, // Make chart responsive on different screen sizes
+                        scales: {
+                            y: {
+                                beginAtZero: true, // Y-axis starts at 0
+                                title: {
+                                    display: true,
+                                    text: 'Amount (in currency)' // Y-axis label
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Month' // X-axis label
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                // Show error in console and alert user if fetching fails
+                console.error('Error loading data:', error);
+                alert("Could not load sales data.");
+            });
+    </script>
+</body>
+</html>
