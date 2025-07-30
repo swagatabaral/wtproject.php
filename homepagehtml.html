@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventory Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, aliceblue, lightsteelblue);
+      color: darkslategray;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0 20px 40px;
+    }
+
+    a {
+      color: royalblue;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    nav {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px;
+      margin: 20px auto;
+      max-width: 1200px;
+    }
+
+    nav .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: darkslategray;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+    }
+
+    nav ul li {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 5px;
+      color: midnightblue;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      color: slategray;
+      font-weight: 500;
+    }
+
+    .nav-buttons {
+      max-width: 400px;
+      margin: 15px auto 50px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .nav-buttons button {
+      background-color: royalblue;
+      color: white;
+      border: none;
+      padding: 14px 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(65, 105, 225, 0.3);
+      transition: background-color 0.3s ease;
+      flex: 1;
+    }
+
+    .nav-buttons button:hover {
+      background-color: mediumblue;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+      max-width: 1200px;
+      margin: 0 auto 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px 20px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: all 0.25s ease-in-out;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      box-shadow: 0 20px 45px rgba(65, 105, 225, 0.3);
+      transform: translateY(-6px);
+    }
+
+    .card h3 {
+      color: darkslategray;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 2.3rem;
+      font-weight: 700;
+      color: midnightblue;
+    }
+
+    .card small {
+      color: slategray;
+      font-weight: 600;
+    }
+
+    .revenue-card {
+      position: relative;
+      padding-top: 100px;
+    }
+
+    .semi-circle {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 60px;
+      overflow: hidden;
+    }
+
+    .semi-circle svg {
+      width: 120px;
+      height: 120px;
+      transform: rotate(-90deg);
+    }
+
+    .semi-circle circle {
+      fill: none;
+      stroke-width: 12;
+      stroke-linecap: round;
+    }
+
+    .semi-circle .bg {
+      stroke: lightgray;
+    }
+
+    .semi-circle .progress {
+      stroke: royalblue;
+      stroke-dasharray: 377;
+      stroke-dashoffset: 377;
+      transition: stroke-dashoffset 1.5s ease;
+    }
+
+    .revenue-amount {
+      position: absolute;
+      top: 35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: royalblue;
+    }
+
+    .chart-section {
+      background: white;
+      max-width: 1200px;
+      margin: 0 auto;
+      border-radius: 14px;
+      padding: 30px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-section h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: darkslategray;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: 350px !important;
+    }
+
+    @media (max-width: 550px) {
+      .nav-buttons {
+        flex-direction: column;
+        max-width: 100%;
+      }
+
+      .nav-buttons button {
+        width: 100%;
+      }
+
+      header h1 {
+        font-size: 2rem;
+      }
+
+      .card p {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">InventorySys</div>
+    <ul>
+      <li><a href="homepagehtml.html">Home</a></li>
+      <li><a href="supplier.php">Supplier</a></li>
+      <li><a href="aboutus.html">About Us</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <h1>Inventory Dashboard</h1>
+    <p>Overview of your inventory & sales metrics</p>
+  </header>
+
+  <div class="nav-buttons">
+    <button onclick="location.href='products.php'">Manage Products</button>
+    <button onclick="location.href='databasesales.php'">View Sales</button>
+  </div>
+
+  <section class="stats-grid">
+    <div class="card" onclick="location.href='sales.php';">
+      <h3>To Ship</h3>
+      <p id="toShip">0</p>
+      <small>Items waiting to be shipped</small>
+    </div>
+
+    <div class="card" onclick="location.href='sales.php';">
+      <h3>To Arrive</h3>
+      <p id="toArrive">0</p>
+      <small>Items expected to arrive</small>
+    </div>
+
+    <div class="card" onclick="location.href='sales.php';">
+      <h3>Shipped</h3>
+      <p id="shipped">0</p>
+      <small>Items successfully shipped</small>
+    </div>
+
+    <div class="card" onclick="location.href='products.php';">
+      <h3>In Inventory</h3>
+      <p id="inventory">0</p>
+      <small>Available stock in store</small>
+    </div>
+
+    <div class="card revenue-card">
+      <h3>Total Revenue</h3>
+      <div class="semi-circle">
+        <svg>
+          <circle class="bg" cx="60" cy="60" r="60" />
+          <circle class="progress" cx="60" cy="60" r="60" />
+        </svg>
+      </div>
+      <div class="revenue-amount" id="revenue">Rs 0</div>
+      <small>Revenue from sold products</small>
+    </div>
+  </section>
+
+  <section class="chart-section">
+    <h2>Monthly Revenue (Last 6 Months)</h2>
+    <canvas id="salesChart"></canvas>
+  </section>
+
+  <footer style="text-align:center; margin-top: 40px; color: slategray;">
+    &copy; 2025 Inventory System | Made with ❤️
+  </footer>
+
+  <script>
+    fetch('stats.php')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('toShip').textContent = data.to_ship || 0;
+        document.getElementById('toArrive').textContent = data.to_arrive || 0;
+        document.getElementById('shipped').textContent = data.shipped_products || 0;
+        document.getElementById('inventory').textContent = data.total_quantity || 0;
+
+        const revenueElem = document.getElementById('revenue');
+        const revenueValue = data.total_revenue || 0;
+        revenueElem.textContent = `Rs ${revenueValue.toFixed(2)}`;
+
+        const maxRevenue = 100000;
+        const revenuePercent = Math.min(revenueValue / maxRevenue, 1);
+        const circle = document.querySelector('.semi-circle .progress');
+        const circumference = 2 * Math.PI * 60;
+        const offset = circumference * (1 - revenuePercent / 2);
+        circle.style.strokeDasharray = circumference;
+        circle.style.strokeDashoffset = offset;
+
+        const months = (data.sales_data || []).map(d => d.month);
+        const sales = (data.sales_data || []).map(d => d.sales);
+
+        new Chart(document.getElementById('salesChart').getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: months,
+            datasets: [{
+              label: 'Revenue (Rs)',
+              data: sales,
+              backgroundColor: 'royalblue',
+              borderRadius: 8,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            animation: { duration: 1000 },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1000 },
+                grid: { color: 'lightsteelblue' }
+              },
+              x: {
+                grid: { display: false }
+              }
+            },
+            plugins: {
+              legend: { display: false }
+            }
+          }
+        });
+      })
+      .catch(err => {
+        console.error('Failed to load stats:', err);
+        alert('Failed to load dashboard data.');
+      });
+  </script>
+
+</body>
+</html>
