@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventory Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f4f6f9;
+      color: #2f3e46;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      background-color: #1e293b;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    nav .logo {
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    nav ul li a:hover {
+      text-decoration: underline;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 20px 10px;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 5px;
+      color: #1f2937;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #6b7280;
+    }
+
+    .utility-bar {
+      max-width: 1200px;
+      margin: 10px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-bar input {
+      padding: 8px 15px;
+      width: 250px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .search-bar input:focus {
+      outline-color: #2563eb;
+      box-shadow: 0 0 6px #2563eb;
+    }
+
+    .clock {
+      font-weight: 600;
+      color: #3b3b3b;
+      min-width: 150px;
+      text-align: right;
+      font-family: monospace;
+    }
+
+    .nav-buttons {
+      max-width: 400px;
+      margin: 0 auto 30px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-buttons button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+      flex: 1 1 180px;
+      max-width: 240px;
+      transition: background 0.3s;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .nav-buttons button:hover {
+      background-color: #1d4ed8;
+    }
+
+    .dashboard {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      padding: 0 20px 40px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 25px 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      text-align: center;
+      transition: 0.25s ease;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 14px 30px rgba(0,0,0,0.15);
+    }
+
+    .card h3 {
+      font-size: 1.3rem;
+      color: #374151;
+      margin-bottom: 18px;
+      font-weight: 700;
+    }
+
+    /* Circle progress  */
+    .circle-progress {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin-bottom: 15px;
+    }
+    .circle-progress svg {
+      width: 120px;
+      height: 120px;
+      transform: rotate(-90deg);
+    }
+    .circle-progress circle {
+      fill: none;
+      stroke-width: 12;
+      stroke-linecap: round;
+    }
+    .circle-progress .bg {
+      stroke: #e5e7eb;
+    }
+    .circle-progress .progress {
+      stroke: #2563eb;
+      stroke-dasharray: 377;
+      stroke-dashoffset: 377;
+      transition: stroke-dashoffset 1.5s ease;
+    }
+    .circle-progress .text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    /* Revenue card  */
+    .revenue-section {
+      grid-column: span 2;
+      background: white;
+      padding: 30px 20px;
+      border-radius: 14px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      text-align: center;
+      cursor: default;
+    }
+    .revenue-section h2 {
+      margin-bottom: 20px;
+      color: #1f2937;
+      font-weight: 700;
+    }
+    .revenue-circle {
+      margin: 0 auto 20px;
+      position: relative;
+      width: 180px;
+      height: 90px;
+    }
+    .revenue-circle svg {
+      width: 180px;
+      height: 180px;
+      transform: rotate(-90deg);
+    }
+    .revenue-circle circle.bg {
+      stroke: #e5e7eb;
+    }
+    .revenue-circle circle.progress {
+      stroke: #10b981;
+      stroke-dasharray: 377;
+      stroke-dashoffset: 377;
+      transition: stroke-dashoffset 1.5s ease;
+    }
+    .revenue-amount {
+      position: absolute;
+      top: 35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #10b981;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .tips-box {
+      background: #fffbea;
+      padding: 15px 20px;
+      border-left: 6px solid #facc15;
+      margin: 0 auto 40px;
+      max-width: 800px;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      color: #92400e;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: auto;
+      padding: 20px;
+      background-color: #1e293b;
+      color: white;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    @media (max-width: 680px) {
+      .revenue-section {
+        grid-column: span 1;
+      }
+      nav ul {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">InventorySys</div>
+  <ul>
+    <li><a href="homepagehtml.html">Home</a></li>
+    <li><a href="supplier.php">Supplier</a></li>
+    <li><a href="aboutus.html">About Us</a></li>
+  </ul>
+</nav>
+
+<header>
+  <h1>Inventory Dashboard</h1>
+  <p>Overview of your inventory & revenue</p>
+</header>
+
+<div class="utility-bar">
+  <div class="search-bar">
+    <input type="search" id="searchInput" placeholder="Search stats..." aria-label="Search stats" />
+  </div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="nav-buttons">
+  <button onclick="location.href='products.php'">Manage Products</button>
+  <button onclick="location.href='databasesales.php'">Sell Products</button>
+</div>
+
+<section class="dashboard" id="statsContainer">
+
+  <div class="card" title="To Ship" >
+    <h3>To Ship</h3>
+    <div class="circle-progress" role="img" aria-label="To Ship progress">
+      <svg>
+        <circle class="bg" cx="60" cy="60" r="60"></circle>
+        <circle class="progress" cx="60" cy="60" r="60"></circle>
+      </svg>
+      <div class="text" id="toShip">0</div>
+    </div>
+    <small>Items waiting to be shipped</small>
+  </div>
+
+  <div class="card" title="To Arrive" >
+    <h3>To Arrive</h3>
+    <div class="circle-progress" role="img" aria-label="To Arrive progress">
+      <svg>
+        <circle class="bg" cx="60" cy="60" r="60"></circle>
+        <circle class="progress" cx="60" cy="60" r="60"></circle>
+      </svg>
+      <div class="text" id="toArrive">0</div>
+    </div>
+    <small>Items expected to arrive</small>
+  </div>
+
+  <div class="card" title="Shipped" >
+    <h3>Shipped</h3>
+    <div class="circle-progress" role="img" aria-label="Shipped progress">
+      <svg>
+        <circle class="bg" cx="60" cy="60" r="60"></circle>
+        <circle class="progress" cx="60" cy="60" r="60"></circle>
+      </svg>
+      <div class="text" id="shipped">0</div>
+    </div>
+    <small>Items successfully shipped</small>
+  </div>
+
+  <div class="card" title="In Inventory" onclick="location.href='products.php'">
+    <h3>In Inventory</h3>
+    <div class="circle-progress" role="img" aria-label="Inventory progress">
+      <svg>
+        <circle class="bg" cx="60" cy="60" r="60"></circle>
+        <circle class="progress" cx="60" cy="60" r="60"></circle>
+      </svg>
+      <div class="text" id="inventory">0</div>
+    </div>
+    <small>Available stock in store</small>
+  </div>
+
+  <div class="revenue-section">
+    <h2>Total Revenue</h2>
+    <div class="revenue-circle" role="img" aria-label="Total revenue progress">
+      <svg>
+        <circle class="bg" cx="75" cy="75" r="60"></circle>
+        <circle class="progress" cx="75" cy="75" r="60"></circle>
+      </svg>
+      <div class="revenue-amount" id="revenue">Rs 0.00</div>
+    </div>
+    <small>Based on total product sales</small>
+  </div>
+
+</section>
+
+<div class="tips-box" id="tips">
+  💡 Tip: Always keep track of low-stock items to avoid delays in shipping.
+</div>
+
+<footer>
+  2025 Inventory System | Made by Nimish Acharya, Mandeep Bhat, Swagata Baral
+</footer>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    const clock = document.getElementById('clock');
+    clock.textContent = now.toLocaleString();
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+
+  fetch('stats.php')
+    .then(res => res.json())
+    .then(data => {
+      const stats = [
+        { id: 'toShip', value: data.to_ship || 0 },
+        { id: 'toArrive', value: data.to_arrive || 0 },
+        { id: 'shipped', value: data.shipped_products || 0 },
+        { id: 'inventory', value: data.total_quantity || 0 }
+      ];
+
+      stats.forEach(stat => {
+        const elem = document.getElementById(stat.id);
+        if (!elem) return;
+        elem.textContent = stat.value;
+
+        // circular progress
+        const card = elem.closest('.card');
+        if (!card) return;
+        const progressCircle = card.querySelector('circle.progress');
+        if (!progressCircle) return;
+
+        const circumference = 2 * Math.PI * 60;
+       
+        const max = 1000; 
+        const percent = Math.min(stat.value / max, 1);
+        const offset = circumference * (1 - percent);
+        progressCircle.style.strokeDasharray = circumference;
+        progressCircle.style.strokeDashoffset = offset;
+      });
+
+      // Revenue circle 
+      const revenueElem = document.getElementById('revenue');
+      const revenueValue = data.total_revenue || 0;
+      revenueElem.textContent = `Rs ${revenueValue.toFixed(2)}`;
+
+     const revenueCircle = document.querySelector('.revenue-circle circle.progress');
+      const circumference = 2 * Math.PI * 60;
+      const maxRevenue = 100000; 
+      const revenuePercent = Math.min(revenueValue / maxRevenue, 1);
+      const revenueOffset = circumference * (1 - revenuePercent);
+      revenueCircle.style.strokeDasharray = circumference;
+      revenueCircle.style.strokeDashoffset = revenueOffset;
+    })
+    .catch(() => {
+      // Handle errors 
+    });
+  // Inventory tips 
+  const tips = [
+    "💡 Keep an eye on slow-moving items to optimize storage.",
+    "📦 Use FIFO (First In, First Out) for perishables.",
+    "🔍 Check for duplicate product entries to avoid confusion.",
+    "🧮 Run regular stock audits to prevent inventory mismatch."
+  ];
+  setInterval(() => {
+    const tipBox = document.getElementById("tips");
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    tipBox.textContent = randomTip;
+  }, 7000);
+
+  // Search filter functionality
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    const filter = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.dashboard .card');
+    cards.forEach(card => {
+      const title = card.getAttribute('data-title').toLowerCase();
+      if (title.includes(filter)) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
